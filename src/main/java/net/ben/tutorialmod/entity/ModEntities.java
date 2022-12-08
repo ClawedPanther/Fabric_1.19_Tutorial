@@ -14,5 +14,4 @@ public class ModEntities {
     public static final EntityType<ZomboEntity> ZOMBO = Registry.register(
             Registry.ENTITY_TYPE, new Identifier(TutorialMod.MOD_ID, "zombo"),
             FabricEntityTypeBuilder.create(SpawnGroup.MONSTER, ZomboEntity::new).dimensions(EntityDimensions.fixed(0.6f, 1.95f)).build());
-
 }
