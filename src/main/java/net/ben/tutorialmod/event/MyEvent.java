@@ -17,35 +17,15 @@ import net.minecraft.text.Text;
 public class MyEvent implements ServerEntityEvents.Load {
     @Override
     public void onLoad(Entity entity, ServerWorld world) {
-        if(entity instanceof ZombieEntity && !world.isClient() && !(entity instanceof ZomboEntity)) {
-//            ZomboEntity replacementZombo = ModEntities.ZOMBO.create(entity.world);
-//            replacementZombo.copyPositionAndRotation(entity);
-//            replacementZombo.setBaby(((ZombieEntity) entity).isBaby());
-//            replacementZombo.setAiDisabled(((ZombieEntity) entity).isAiDisabled());
-//            entity.world.spawnEntity(replacementZombo);
-//            replacementZombo.setCanPickUpLoot(((ZombieEntity) entity).canPickUpLoot());
-//            for (EquipmentSlot equipmentSlot : EquipmentSlot.values()) {
-//                ItemStack itemStack = ((ZombieEntity) entity).getEquippedStack(equipmentSlot);
-//                if (itemStack.isEmpty()) continue;
-//                replacementZombo.equipStack(equipmentSlot, itemStack.copy());
-//                replacementZombo.setEquipmentDropChance(equipmentSlot, 0.085f);
-//                itemStack.setCount(0);
-//            }
-//            ((ZombieEntity) entity).world.spawnEntity(replacementZombo);
-//            if (((ZombieEntity) entity).hasVehicle()) {
-//                Entity vehicleEntity = ((ZombieEntity) entity).getVehicle();
-//                ((ZombieEntity) entity).stopRiding();
-//                replacementZombo.startRiding(vehicleEntity, true);
-//            }
-//            ((ZombieEntity) entity).discard();
+        if(entity.getType() == EntityType.ZOMBIE) {
             ((ZombieEntity) entity).convertTo(ModEntities.ZOMBO, true);
         }
-        if(entity instanceof ZomboEntity && !world.isClient()) {
-            MinecraftClient mc = MinecraftClient.getInstance();
-            if (mc.player != null){
-                mc.player.sendMessage(Text.literal("Ah, a Zombo!"));
-
-            }
-        }
+//        if(entity instanceof ZomboEntity && !world.isClient()) {
+//            MinecraftClient mc = MinecraftClient.getInstance();
+//            if (mc.player != null){
+//                mc.player.sendMessage(Text.literal("Ah, a Zombo!"));
+//
+//            }
+//        }
     }
 }
