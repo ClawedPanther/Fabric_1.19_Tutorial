@@ -6,6 +6,8 @@ import net.ben.tutorialmod.event.MyEvent;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
+import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRenderers;
@@ -20,11 +22,14 @@ public class TutorialMod implements ModInitializer {
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 
+
 	@Override
 	public void onInitialize() {
 		ServerEntityEvents.ENTITY_LOAD.register(new MyEvent());
 
 		FabricDefaultAttributeRegistry.register(ModEntities.ZOMBO, ZomboEntity.setAttributes());
+
+
 
 	}
 }
