@@ -26,6 +26,7 @@ public class WalkForwardsGoal extends Goal {
     protected int jumpCooldown;
     protected int jumpWait;
     protected float slipperiness;
+    protected int jumpAssist;
 
 
     @Override
@@ -36,7 +37,7 @@ public class WalkForwardsGoal extends Goal {
 
     @Override
     public void start() {
-        jumpCooldown = 0; jumpWait = 0;
+        jumpCooldown = 0; jumpWait = 0; jumpAssist = 0;
     }
 
     @Override
@@ -57,6 +58,9 @@ public class WalkForwardsGoal extends Goal {
             this.mob.getLookControl().lookAt(this.mob.getTarget(), 30.0f, 30.0f);
         }
         if (this.mob.isOnGround()) {
+            if (jumpAssist != 0){
+                jumpAssist = 0;
+            }
             slipperiness = this.mob.world.getBlockState(blockUnderPos).getBlock().getSlipperiness();
             if (jumpCooldown < 2) {
                 jumpCooldown++;
@@ -66,6 +70,13 @@ public class WalkForwardsGoal extends Goal {
             double addX = MathHelper.sin(yaw * (float) Math.PI / 180) * speedMod;
             double addZ = MathHelper.cos(yaw * (float) Math.PI / 180) * speedMod;
             this.mob.setVelocity(this.mob.getVelocity().add(new Vec3d(-addX, 0.0d, addZ)));
+        } else if (jumpAssist != 3) {
+            float yaw = this.mob.getHeadYaw();
+            double speedMod = this.speed * this.mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 0.01;
+            double addX = MathHelper.sin(yaw * (float) Math.PI / 180) * speedMod;
+            double addZ = MathHelper.cos(yaw * (float) Math.PI / 180) * speedMod;
+            this.mob.setVelocity(this.mob.getVelocity().add(new Vec3d(-addX, 0.0d, addZ)));
+            jumpAssist ++;
         }
         if (this.mob.world.getBlockState(blockUnderPos).isOf(Blocks.AIR) && jumpCooldown == 2 && this.mob.isOnGround()){
             if (jumpWait == 3){
