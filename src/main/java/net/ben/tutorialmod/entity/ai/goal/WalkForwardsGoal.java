@@ -5,12 +5,14 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -27,6 +29,7 @@ public class WalkForwardsGoal extends Goal {
     protected int jumpWait;
     protected float slipperiness;
     protected int jumpAssist;
+    protected int attackCooldown;
 
 
     @Override
@@ -37,7 +40,7 @@ public class WalkForwardsGoal extends Goal {
 
     @Override
     public void start() {
-        jumpCooldown = 0; jumpWait = 0; jumpAssist = 0;
+        jumpCooldown = 0; jumpWait = 0; jumpAssist = 0; attackCooldown = 0;
     }
 
     @Override
@@ -90,6 +93,20 @@ public class WalkForwardsGoal extends Goal {
         }
         this.mob.setBodyYaw(this.mob.getHeadYaw());
         this.mob.setYaw(this.mob.getHeadYaw());
+        if (this.mob.getTarget() != null){
+            LivingEntity target = this.mob.getTarget();
+            double square_distance = this.mob.squaredDistanceTo(target.getX(), target.getY(), target.getZ());
+            double max_square_distance = this.mob.getWidth() * 2.0f * (this.mob.getWidth() * 2.0f) + target.getWidth();
+            if (attackCooldown == 0) {
+                attackCooldown = 20;
+                this.mob.swingHand(Hand.MAIN_HAND);
+                if (square_distance <= max_square_distance) {
+                    this.mob.tryAttack(this.mob.getTarget());
+                }
+            } else {
+                attackCooldown--;
+            }
+        }
     }
 
     @Override
