@@ -57,6 +57,15 @@ public class WalkForwardsGoal extends Goal {
     @Override
     public void tick() {
         BlockPos blockUnderPos = new BlockPos(new Vec3d( this.mob.getX(), this.mob.getY()-1, this.mob.getZ()));
+        BlockPos blockFeetPos = new BlockPos(new Vec3d( this.mob.getX(), this.mob.getY(), this.mob.getZ()));
+        BlockPos blockHeadPos = new BlockPos(new Vec3d( this.mob.getX(), this.mob.getY()+1, this.mob.getZ()));
+        double speedMod = this.speed * this.mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * slipperiness;
+        if (this.mob.isBaby()) {
+            speedMod *= 1.5;
+        }
+        if (this.mob.isTouchingWater()){
+            speedMod *= 0.33;
+        }
         if (this.mob.getTarget() != null){
             this.mob.getLookControl().lookAt(this.mob.getTarget(), 30.0f, 30.0f);
         }
@@ -69,13 +78,11 @@ public class WalkForwardsGoal extends Goal {
                 jumpCooldown++;
             }
             float yaw = this.mob.getHeadYaw();
-            double speedMod = this.speed * this.mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * slipperiness;
             double addX = MathHelper.sin(yaw * (float) Math.PI / 180) * speedMod;
             double addZ = MathHelper.cos(yaw * (float) Math.PI / 180) * speedMod;
             this.mob.setVelocity(this.mob.getVelocity().add(new Vec3d(-addX, 0.0d, addZ)));
         } else if (jumpAssist != 3) {
             float yaw = this.mob.getHeadYaw();
-            double speedMod = this.speed * this.mob.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED) * 0.01;
             double addX = MathHelper.sin(yaw * (float) Math.PI / 180) * speedMod;
             double addZ = MathHelper.cos(yaw * (float) Math.PI / 180) * speedMod;
             this.mob.setVelocity(this.mob.getVelocity().add(new Vec3d(-addX, 0.0d, addZ)));
