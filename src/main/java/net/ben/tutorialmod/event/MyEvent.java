@@ -1,5 +1,6 @@
 package net.ben.tutorialmod.event;
 
+import net.ben.tutorialmod.TutorialMod;
 import net.ben.tutorialmod.TutorialModClient;
 import net.ben.tutorialmod.entity.ModEntities;
 import net.ben.tutorialmod.entity.custom.ZomboEntity;
@@ -20,12 +21,8 @@ public class MyEvent implements ServerEntityEvents.Load {
         if(entity.getType() == EntityType.ZOMBIE && world.getGameRules().getBoolean(TutorialModClient.GENERATE_ZOMBOS)) {
             ((ZombieEntity) entity).convertTo(ModEntities.ZOMBO, true);
         }
-//        if(entity instanceof ZomboEntity && !world.isClient()) {
-//            MinecraftClient mc = MinecraftClient.getInstance();
-//            if (mc.player != null){
-//                mc.player.sendMessage(Text.literal("Ah, a Zombo!"));
-//
-//            }
-//        }
+        if(entity instanceof ZomboEntity && !world.isClient()) {
+            TutorialMod.zomboNEAT.assignNetwork((ZomboEntity) entity);
+        }
     }
 }
