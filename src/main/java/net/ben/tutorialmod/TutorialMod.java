@@ -23,7 +23,7 @@ public class TutorialMod implements ModInitializer {
 	public static final String MOD_ID = "tutorialmod";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	public static ZomboNEAT zomboNEAT = new ZomboNEAT();
+	public ZomboNEAT zomboNEAT;
 
 
 
@@ -31,6 +31,8 @@ public class TutorialMod implements ModInitializer {
 	public void onInitialize() {
 		ServerEntityEvents.ENTITY_LOAD.register(new MyEvent());
 		ServerEntityEvents.ENTITY_UNLOAD.register(new UponMobDeath());
+		
+		zomboNEAT = new ZomboNEAT();
 
 		FabricDefaultAttributeRegistry.register(ModEntities.ZOMBO, ZomboEntity.setAttributes());
 
