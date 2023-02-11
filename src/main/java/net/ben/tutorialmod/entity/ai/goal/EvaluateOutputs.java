@@ -93,6 +93,11 @@ public class EvaluateOutputs extends Goal {
 
     @Override
     public void tick() {
+        float yaw = this.mob.getAllYaw();
+        this.mob.setYaw(yaw);
+        this.mob.setHeadYaw(yaw);
+        this.mob.setBodyYaw(yaw);
+
         if (this.mob.isOnGround()){
             if (jumpCooldown > 0) {
                 jumpCooldown--;

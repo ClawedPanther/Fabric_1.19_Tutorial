@@ -172,8 +172,6 @@ public class Genome implements Comparable {
 
         }
 
-        //System.out.println("matching : "+matching + "\ndisjoint : "+ disjoint + "\nExcess : "+ excess +"\nWeight : "+ weight);
-
         int N = matching+disjoint+excess ;
 
         if(N>0)
@@ -239,7 +237,6 @@ public class Genome implements Comparable {
     }
 
     private float sigmoid(float x) {
-        // TODO Auto-generated method stub
         return (float) (1 / (1 + Math.exp(-4.9 * x)));
     }
 
@@ -268,7 +265,6 @@ public class Genome implements Comparable {
         if (rand.nextFloat() <= mutationRates.get(MutationKeys.ENABLE_MUTATION_CHANCE))
             enableMutate();
     }
-
     void mutateWeight() {
 
         for (ConnectionGene c : connectionGeneList) {
@@ -319,7 +315,7 @@ public class Genome implements Comparable {
         }
 
         if (node1 < 0 || node2 < 0)
-            throw new RuntimeErrorException(null);          // TODO Pool.newInnovation(node1, node2)
+            throw new RuntimeErrorException(null);
         connectionGeneList.add(new ConnectionGene(node1, node2, InnovationCounter.newInnovation(), 4 * rand.nextFloat() - 2, true));                // Add innovation and weight
 
     }
@@ -342,7 +338,6 @@ public class Genome implements Comparable {
         }
     }
     void disableMutate() {
-        //generateNetwork();                // remove laters
         if (connectionGeneList.size() > 0) {
             ConnectionGene randomCon = connectionGeneList.get(rand.nextInt(connectionGeneList.size()));
             randomCon.setEnabled(false);
@@ -351,7 +346,6 @@ public class Genome implements Comparable {
 
 
     void enableMutate() {
-        //generateNetwork();                // remove laters
         if (connectionGeneList.size() > 0) {
             ConnectionGene randomCon = connectionGeneList.get(rand.nextInt(connectionGeneList.size()));
             randomCon.setEnabled(true);

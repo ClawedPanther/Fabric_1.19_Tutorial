@@ -18,11 +18,15 @@ import net.minecraft.text.Text;
 public class MyEvent implements ServerEntityEvents.Load {
     @Override
     public void onLoad(Entity entity, ServerWorld world) {
-        if(entity.getType() == EntityType.ZOMBIE && world.getGameRules().getBoolean(TutorialModClient.GENERATE_ZOMBOS)) {
-            ((ZombieEntity) entity).convertTo(ModEntities.ZOMBO, true);
-        }
-        if(entity instanceof ZomboEntity && !world.isClient()) {
+
+        if(entity instanceof ZomboEntity && ((ZomboEntity) entity).genomeNum == -1) {
+
             TutorialMod.zomboNEAT.assignNetwork((ZomboEntity) entity);
+        }
+        if(entity.getType() == EntityType.ZOMBIE && world.getGameRules().getBoolean(TutorialModClient.GENERATE_ZOMBOS) && !TutorialMod.zomboNEAT.populationComplete()) {
+            ((ZombieEntity) entity).convertTo(ModEntities.ZOMBO, true);
+        } else if (entity instanceof MobEntity && entity.getType() != EntityType.SKELETON && entity.getType() != ModEntities.ZOMBO){
+            entity.discard();
         }
     }
 }

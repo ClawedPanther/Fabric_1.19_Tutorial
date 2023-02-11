@@ -14,11 +14,13 @@ import java.util.ArrayList;
  */
 public class ZomboNEAT implements Environment {
 
-    protected static final int population = NEAT_Config.POPULATION;
-    protected static int currentGenome = 0;
+    protected int currentGenome = 0;
     protected Pool pool;
+    protected ArrayList<Genome> genomes = new ArrayList<>();
     protected int generation = 0;
-    protected boolean generationDone = false;
+    protected int genomesEvaluated = 0;
+    protected float lastBest = 0;
+
 
     /*
     @Override
@@ -46,18 +48,8 @@ public class ZomboNEAT implements Environment {
     */
 
     public void assignNetwork(ZomboEntity zomboEntity){
-        int totalGeneomes = 0;
-
-        for(Species s: this.pool.getSpecies()){
-            totalGeneomes += s.getGenomes().size();
-        }
-
         zomboEntity.genomeNum = currentGenome;
-        if (currentGenome+1==totalGeneomes) {
-            currentGenome = 0;
-            generationDone = true;
-
-        } else {
+        if (currentGenome!=genomes.size()) {
             currentGenome ++;
         }
     }
@@ -65,40 +57,91 @@ public class ZomboNEAT implements Environment {
     public ZomboNEAT(){
         this.pool = new Pool();
         this.pool.initializePool();
-    }
-
-    public Genome getMobGenome(int genomeNum){
-        ArrayList<Genome> allGenome = new ArrayList<>();
 
         for(Species s: this.pool.getSpecies()){
             for(Genome g: s.getGenomes()){
-                allGenome.add(g);
+                for (int i=0; i==5; i++){
+                    g.Mutate();
+                }
+                genomes.add(g);
             }
         }
 
-        Genome mobGenome = allGenome.get(genomeNum);
+    }
+
+    public boolean populationComplete(){
+        return currentGenome==genomes.size();
+    }
+
+    public boolean generationComplete() {return genomesEvaluated==genomes.size();}
+
+    public Genome getMobGenome(int genomeNum){
+
+        while (genomeNum >= genomes.size()){
+            genomeNum--;
+        }
+
+        Genome mobGenome = genomes.get(genomeNum);
 
         return mobGenome;
     }
 
     public void assignFitness(ZomboEntity zomboEntity){
+        genomesEvaluated ++;
         Genome genome = getMobGenome(zomboEntity.genomeNum);
         float fitness = 0;
-        fitness += 0.2*(1-(zomboEntity.totalDistanceToPlayer/(zomboEntity.ticksSurvived*35)));
-        fitness -= 0.05*(zomboEntity.damageTaken*0.05);
-        fitness += 1-Math.exp(-0.1*zomboEntity.successfulHits);
+        fitness += (1-(zomboEntity.totalDistanceToTarget/(zomboEntity.ticksSurvived*50)));
+        fitness += zomboEntity.successfulHits;
+        //fitness += 1-Math.exp(-0.1*zomboEntity.successfulHits);
         genome.setFitness(fitness);
-        if (generationDone){
+        if (genomesEvaluated  == genomes.size()){
             doGeneration();
+            genomesEvaluated = 0;
+            currentGenome = 0;
         }
+    }
+
+    public float getTopScore(){
+        Genome topGenome = pool.getTopGenome();
+        return topGenome.getPoints();
+    }
+
+    public int getGeneration(){
+        return generation;
+    }
+
+    public float getLastBest(){
+        return lastBest;
+    }
+
+    public int getCurrentGenome(){
+        return currentGenome;
+    }
+
+    public int getGenomesSize(){
+        return genomes.size();
     }
 
     private void doGeneration(){
 
-        Genome topGenome = new Genome();
+        Genome topGenome;
+
+        pool.evaluateFitness(this);
         topGenome = pool.getTopGenome();
-        System.out.println("TopFitness : " + topGenome.getPoints());
+        lastBest = topGenome.getPoints();
+        System.out.println(" ##################### TopFitness : " + topGenome.getPoints());
         pool.breedNewGeneration();
+
+        ArrayList<Genome> Temp = new ArrayList<>();
+
+        for(Species s: this.pool.getSpecies()){
+            for(Genome g: s.getGenomes()){
+                Temp.add(g);
+            }
+        }
+
+        genomes = Temp;
+
         this.generation++;
 
 
@@ -108,10 +151,9 @@ public class ZomboNEAT implements Environment {
         Genome genome = getMobGenome(zomboEntity.genomeNum);
         float inputs[] = zomboEntity.getZomboInputs();
         float output[] = genome.evaluateNetwork(inputs);
-        zomboEntity.setTryJump(output[0]>0.8);
-        zomboEntity.setTryAttack(output[1]>0.8);
-        zomboEntity.setTryWalk(output[2]>0.8);
-        zomboEntity.setYaw(output[3]*360);
+        zomboEntity.setTryAttack(output[0]>=0.5);
+        zomboEntity.setTryWalk(output[1]>=0.5);
+        zomboEntity.setAllYaw(output[2]*360);
     }
 /*
     public static void main(String arg0[]){

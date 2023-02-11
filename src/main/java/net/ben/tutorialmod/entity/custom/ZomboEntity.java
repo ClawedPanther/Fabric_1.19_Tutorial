@@ -3,6 +3,7 @@ package net.ben.tutorialmod.entity.custom;
 import com.google.common.collect.ImmutableList;
 import net.ben.tutorialmod.TutorialMod;
 import net.ben.tutorialmod.entity.ModEntities;
+import net.ben.tutorialmod.entity.ai.goal.CustomTargetGoal;
 import net.ben.tutorialmod.entity.ai.goal.DetectNearbyBlock;
 import net.ben.tutorialmod.entity.ai.goal.EvaluateOutputs;
 import net.ben.tutorialmod.entity.ai.goal.WalkForwardsGoal;
@@ -50,11 +51,12 @@ public class ZomboEntity extends ZombieEntity{
     public boolean walkForwards = false;
     public boolean jump = false;
     public boolean attack = false;
-    public int genomeNum;
-    public double totalDistanceToPlayer = 0.0;
+    public int genomeNum = -1;
+    public double totalDistanceToTarget = 0.0;
     public int ticksSurvived = 0;
     public int successfulHits = 0;
     public float damageTaken = 0.0f;
+    public float allYaw = 0.0f;
 
 
     @Override
@@ -67,11 +69,11 @@ public class ZomboEntity extends ZombieEntity{
         super(entityType, world);
     }
 
-    public double distanceToPlayer(){
-        double distance = this.getAttributeValue(EntityAttributes.GENERIC_FOLLOW_RANGE);
-        PlayerEntity closestPlayer = this.world.getClosestPlayer(this.getX(), this.getY(), this.getZ(), this.getAttributeValue(EntityAttributes.GENERIC_FOLLOW_RANGE), true);
-        if (closestPlayer != null){
-            distance = closestPlayer.squaredDistanceTo(this.getX(), this.getY(), this.getZ());
+    public double distanceToTarget(){
+        double distance = 50;
+        LivingEntity target = this.getTarget();
+        if (target != null){
+            distance = target.squaredDistanceTo(this.getX(), this.getY(), this.getZ());
         }
         return distance;
 
@@ -89,6 +91,10 @@ public class ZomboEntity extends ZombieEntity{
         return attack;
     }
 
+    public float getAllYaw(){
+        return allYaw;
+    }
+
     public void setTryJump(boolean jumpOutput){
         jump = jumpOutput;
     }
@@ -101,28 +107,44 @@ public class ZomboEntity extends ZombieEntity{
         attack = attackOutput;
     }
 
+    public void setAllYaw(float allYawOutput){
+        allYaw = allYawOutput;
+    }
+
     @Override
     public void tick() {
+        if (ticksSurvived%10 == 0){
+            this.setTarget(null);
+        }
         ticksSurvived ++;
-        totalDistanceToPlayer += this.distanceToPlayer();
-        TutorialMod.zomboNEAT.getGenomeOutput(this);
+        if (ticksSurvived > 600){
+            this.discard();
+        }
+        totalDistanceToTarget += this.distanceToTarget();
+        if ((ticksSurvived%2)==0 && genomeNum >= 0) {
+            TutorialMod.zomboNEAT.getGenomeOutput(this);
+        }
         super.tick();
     }
 
     public float[] getZomboInputs(){
         float targetXDiff = 0;
         float targetZDiff = 0;
+        float angleToTarget = 0;
         float hasTarget = 1;
         if (this.getTarget() != null){
             targetXDiff = (float) (this.getTarget().getX() - this.getX())/35;
             targetZDiff = (float) (this.getTarget().getZ() - this.getZ())/35;
+            angleToTarget=(float)((MathHelper.atan2((double)-targetXDiff, (double)targetZDiff))/(2*Math.PI));
         } else {
             hasTarget = 0;
         }
         float averageYaw = getAverageZomboYaw();
         averageYaw /= 360;
 
-        return new float[]{targetXDiff, targetZDiff, hasTarget, averageYaw};
+
+
+        return new float[]{targetXDiff, targetZDiff, hasTarget, averageYaw, angleToTarget};
     }
 
     private float getAverageZomboYaw (){
@@ -135,7 +157,9 @@ public class ZomboEntity extends ZombieEntity{
                 averageYaw += entity.getYaw();
             }
         }
-        averageYaw /= totalZombos;
+        if (totalZombos >0){
+            averageYaw /= totalZombos;
+        }
         return averageYaw;
     }
 
@@ -146,7 +170,7 @@ public class ZomboEntity extends ZombieEntity{
     @Override
     protected void initCustomGoals() {
         this.goalSelector.add(2, new EvaluateOutputs(this, 0.37d));
-        this.targetSelector.add(1, new ActiveTargetGoal<SkeletonEntity>(this, SkeletonEntity.class, true));
+        this.targetSelector.add(1, new ActiveTargetGoal<>(this, SkeletonEntity.class, true));
     }
 
     public static DefaultAttributeContainer.Builder setAttributes() {
