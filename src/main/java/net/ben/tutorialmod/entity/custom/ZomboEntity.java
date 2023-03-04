@@ -10,6 +10,7 @@ import net.ben.tutorialmod.entity.ai.goal.WalkForwardsGoal;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.entity.*;
+import net.minecraft.entity.ai.TargetPredicate;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.sensor.Sensor;
@@ -25,13 +26,16 @@ import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.AxolotlEntity;
 import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.entity.passive.MerchantEntity;
+import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.loot.context.LootContext;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.predicate.entity.EntityPredicates;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.FluidTags;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -42,6 +46,7 @@ import net.minecraft.world.LocalDifficulty;
 import net.minecraft.world.ServerWorldAccess;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+
 import java.time.LocalDate;
 import java.time.temporal.ChronoField;
 import java.util.Arrays;
@@ -57,6 +62,7 @@ public class ZomboEntity extends ZombieEntity{
     public int successfulHits = 0;
     public float damageTaken = 0.0f;
     public float allYaw = 0.0f;
+    protected double lastDistance;
 
 
     @Override
@@ -70,10 +76,11 @@ public class ZomboEntity extends ZombieEntity{
     }
 
     public double distanceToTarget(){
+
         double distance = 50;
         LivingEntity target = this.getTarget();
         if (target != null){
-            distance = target.squaredDistanceTo(this.getX(), this.getY(), this.getZ());
+            distance = Math.sqrt(Math.pow(this.getX()-target.getX(), 2) + Math.pow(this.getZ()-target.getZ(), 2));
         }
         return distance;
 
@@ -113,16 +120,22 @@ public class ZomboEntity extends ZombieEntity{
 
     @Override
     public void tick() {
-        if (ticksSurvived%10 == 0){
-            this.setTarget(null);
-        }
-        ticksSurvived ++;
-        if (ticksSurvived > 600){
-            this.discard();
-        }
-        totalDistanceToTarget += this.distanceToTarget();
-        if ((ticksSurvived%2)==0 && genomeNum >= 0) {
-            TutorialMod.zomboNEAT.getGenomeOutput(this);
+        if (this.world.isClient == false&&this.isAlive()){
+            ticksSurvived ++;
+            if (ticksSurvived > 600){
+                this.discard();
+            }
+
+            if (ticksSurvived%5!=1 || ticksSurvived==1){
+                lastDistance = this.distanceToTarget();
+            }
+            if (ticksSurvived%5==0){
+                this.setTarget(null);
+            }
+            totalDistanceToTarget += lastDistance;
+            if ((ticksSurvived%2)==0 && genomeNum >= 0) {
+                TutorialMod.zomboNEAT.getGenomeOutput(this);
+            }
         }
         super.tick();
     }
@@ -132,9 +145,14 @@ public class ZomboEntity extends ZombieEntity{
         float targetZDiff = 0;
         float angleToTarget = 0;
         float hasTarget = 1;
-        if (this.getTarget() != null){
-            targetXDiff = (float) (this.getTarget().getX() - this.getX())/35;
-            targetZDiff = (float) (this.getTarget().getZ() - this.getZ())/35;
+        float toTarget;
+
+        toTarget = ((float) this.distanceToTarget())/50;
+
+        LivingEntity target = this.getTarget();
+        if (target != null){
+            targetXDiff = (float) (target.getX() - this.getX())/35;
+            targetZDiff = (float) (target.getZ() - this.getZ())/35;
             angleToTarget=(float)((MathHelper.atan2((double)-targetXDiff, (double)targetZDiff))/(2*Math.PI));
         } else {
             hasTarget = 0;
@@ -144,7 +162,7 @@ public class ZomboEntity extends ZombieEntity{
 
 
 
-        return new float[]{targetXDiff, targetZDiff, hasTarget, averageYaw, angleToTarget};
+        return new float[]{toTarget, hasTarget, averageYaw, angleToTarget};
     }
 
     private float getAverageZomboYaw (){
@@ -170,7 +188,7 @@ public class ZomboEntity extends ZombieEntity{
     @Override
     protected void initCustomGoals() {
         this.goalSelector.add(2, new EvaluateOutputs(this, 0.37d));
-        this.targetSelector.add(1, new ActiveTargetGoal<>(this, SkeletonEntity.class, true));
+        this.targetSelector.add(1, new ActiveTargetGoal<>(this, VillagerEntity.class,0, true, false, null));
     }
 
     public static DefaultAttributeContainer.Builder setAttributes() {

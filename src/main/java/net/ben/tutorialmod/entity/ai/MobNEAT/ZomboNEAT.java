@@ -5,6 +5,7 @@ import net.ben.tutorialmod.NEAT.Genome;
 import net.ben.tutorialmod.NEAT.Pool;
 import net.ben.tutorialmod.NEAT.Species;
 import net.ben.tutorialmod.NEAT.config.NEAT_Config;
+import net.ben.tutorialmod.TutorialModClient;
 import net.ben.tutorialmod.entity.custom.ZomboEntity;
 import net.minecraft.util.math.MathHelper;
 import java.util.ArrayList;
@@ -14,12 +15,19 @@ import java.util.ArrayList;
  */
 public class ZomboNEAT implements Environment {
 
+    protected  boolean generatingBest = false;
+    protected boolean generateBestNext = false;
+    protected boolean generationEvaluationDone = false;
     protected int currentGenome = 0;
     protected Pool pool;
     protected ArrayList<Genome> genomes = new ArrayList<>();
     protected int generation = 0;
     protected int genomesEvaluated = 0;
-    protected float lastBest = 0;
+    public float lastBestScore = 0;
+    protected int bestGenome = 0;
+    public int villagerNum = 0;
+
+
 
 
     /*
@@ -48,9 +56,17 @@ public class ZomboNEAT implements Environment {
     */
 
     public void assignNetwork(ZomboEntity zomboEntity){
-        zomboEntity.genomeNum = currentGenome;
-        if (currentGenome!=genomes.size()) {
-            currentGenome ++;
+        if (currentGenome == 0 && generatingBest == false){
+            lastBestScore = 0;
+        }
+        if (generatingBest){
+            zomboEntity.genomeNum = bestGenome;
+        } else {
+            zomboEntity.genomeNum = currentGenome;
+            if (currentGenome!=genomes.size()) {
+                currentGenome ++;
+            }
+
         }
     }
 
@@ -60,13 +76,10 @@ public class ZomboNEAT implements Environment {
 
         for(Species s: this.pool.getSpecies()){
             for(Genome g: s.getGenomes()){
-                for (int i=0; i==5; i++){
-                    g.Mutate();
-                }
                 genomes.add(g);
             }
         }
-
+        bestGenome = 0;
     }
 
     public boolean populationComplete(){
@@ -87,31 +100,43 @@ public class ZomboNEAT implements Environment {
     }
 
     public void assignFitness(ZomboEntity zomboEntity){
+
         genomesEvaluated ++;
-        Genome genome = getMobGenome(zomboEntity.genomeNum);
-        float fitness = 0;
-        fitness += (1-(zomboEntity.totalDistanceToTarget/(zomboEntity.ticksSurvived*50)));
-        fitness += zomboEntity.successfulHits;
-        //fitness += 1-Math.exp(-0.1*zomboEntity.successfulHits);
-        genome.setFitness(fitness);
+        if (zomboEntity.world.getGameRules().getBoolean(TutorialModClient.GENERATE_BEST_ZOMBOS)){
+            generateBestNext = true;
+        } else {
+            generateBestNext = false;
+        }
+
+        if (generatingBest == false){
+            Genome genome = getMobGenome(zomboEntity.genomeNum);
+            float fitness = 0;
+            if (zomboEntity.totalDistanceToTarget/zomboEntity.ticksSurvived<3){
+                fitness += 0.05*(1-(zomboEntity.totalDistanceToTarget/(zomboEntity.ticksSurvived*5)));
+            }
+            //fitness += 0.1*Math.pow(zomboEntity.successfulHits, 1.5);
+            //fitness += 1-Math.exp(-0.1*zomboEntity.successfulHits);
+            fitness += (1/(1+Math.exp(-0.6*(zomboEntity.successfulHits-5))))-0.0474;
+            genome.setFitness(fitness);
+            if (fitness>lastBestScore){
+                lastBestScore = fitness;
+            }
+
+        }
+
         if (genomesEvaluated  == genomes.size()){
             doGeneration();
             genomesEvaluated = 0;
-            currentGenome = 0;
         }
     }
 
-    public float getTopScore(){
+    public float getTopScorer(){
         Genome topGenome = pool.getTopGenome();
         return topGenome.getPoints();
     }
 
     public int getGeneration(){
         return generation;
-    }
-
-    public float getLastBest(){
-        return lastBest;
     }
 
     public int getCurrentGenome(){
@@ -123,26 +148,38 @@ public class ZomboNEAT implements Environment {
     }
 
     private void doGeneration(){
+        if (generationEvaluationDone==false){
+            pool.evaluateFitness(this);
 
-        Genome topGenome;
+            Genome topGenome;
+            topGenome = pool.getTopGenome();
+            bestGenome = genomes.indexOf(topGenome);
+            generationEvaluationDone = true;
+        }
+        if (generateBestNext){
+            generatingBest = true;
+            currentGenome --;
+        } else {
+            generationEvaluationDone = false;
+            generatingBest = false;
 
-        pool.evaluateFitness(this);
-        topGenome = pool.getTopGenome();
-        lastBest = topGenome.getPoints();
-        System.out.println(" ##################### TopFitness : " + topGenome.getPoints());
-        pool.breedNewGeneration();
+            pool.breedNewGeneration();
 
-        ArrayList<Genome> Temp = new ArrayList<>();
+            ArrayList<Genome> Temp = new ArrayList<>();
 
-        for(Species s: this.pool.getSpecies()){
-            for(Genome g: s.getGenomes()){
-                Temp.add(g);
+            for(Species s: this.pool.getSpecies()){
+                for(Genome g: s.getGenomes()){
+                    Temp.add(g);
+                }
             }
+
+            genomes = Temp;
+
+            this.generation++;
+
+            currentGenome = 0;
         }
 
-        genomes = Temp;
-
-        this.generation++;
 
 
     }

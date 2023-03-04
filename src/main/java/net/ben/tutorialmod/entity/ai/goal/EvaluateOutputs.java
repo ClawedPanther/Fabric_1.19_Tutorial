@@ -78,6 +78,7 @@ public class EvaluateOutputs extends Goal {
                 this.mob.swingHand(Hand.MAIN_HAND);
                 if (square_distance <= max_square_distance) {
                     this.mob.tryAttack(this.mob.getTarget());
+                    this.mob.successfulHits++;
                 }
             }
         }

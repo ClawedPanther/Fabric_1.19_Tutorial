@@ -78,7 +78,6 @@ public class Pool {
         //      allGenome.get(allGenome.size()-1).writeTofile();
         //       System.out.println("TopFitness : "+ allGenome.get(allGenome.size()-1).getFitness());
         for (int i =0 ; i<allGenome.size(); i++) {
-            allGenome.get(i).setPoints(allGenome.get(i).getFitness());      //TODO use adjustedFitness and remove points
             allGenome.get(i).setFitness(i);
         }
     }

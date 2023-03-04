@@ -22,6 +22,8 @@ public class TutorialModClient implements ClientModInitializer {
 
     public static final GameRules.Key<GameRules.BooleanRule> GENERATE_ZOMBOS =
             GameRuleRegistry.register("generateZombos", GameRules.Category.UPDATES, GameRuleFactory.createBooleanRule(true));
+    public static final GameRules.Key<GameRules.BooleanRule> GENERATE_BEST_ZOMBOS =
+            GameRuleRegistry.register("generateBestZombos", GameRules.Category.UPDATES, GameRuleFactory.createBooleanRule(false));
 
     @Override
     public void onInitializeClient() {
