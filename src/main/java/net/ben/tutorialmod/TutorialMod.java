@@ -3,7 +3,7 @@ package net.ben.tutorialmod;
 import net.ben.tutorialmod.entity.ModEntities;
 import net.ben.tutorialmod.entity.ai.MobNEAT.ZomboNEAT;
 import net.ben.tutorialmod.entity.custom.ZomboEntity;
-import net.ben.tutorialmod.event.MyEvent;
+import net.ben.tutorialmod.event.UponMobSpawn;
 import net.ben.tutorialmod.event.UponMobDeath;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.EventFactory;
@@ -29,7 +29,7 @@ public class TutorialMod implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		ServerEntityEvents.ENTITY_LOAD.register(new MyEvent());
+		ServerEntityEvents.ENTITY_LOAD.register(new UponMobSpawn());
 		ServerEntityEvents.ENTITY_UNLOAD.register(new UponMobDeath());
 		
 		zomboNEAT = new ZomboNEAT();

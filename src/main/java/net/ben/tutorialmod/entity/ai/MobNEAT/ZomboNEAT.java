@@ -8,6 +8,11 @@ import net.ben.tutorialmod.NEAT.config.NEAT_Config;
 import net.ben.tutorialmod.TutorialModClient;
 import net.ben.tutorialmod.entity.custom.ZomboEntity;
 import net.minecraft.util.math.MathHelper;
+
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
 /**
@@ -55,20 +60,36 @@ public class ZomboNEAT implements Environment {
     }
     */
 
+
+    /*
+    set the genome number of a Zombo to the value of the current genome
+    or the value of the best genome in the generation
+     */
     public void assignNetwork(ZomboEntity zomboEntity){
         if (currentGenome == 0 && generatingBest == false){
             lastBestScore = 0;
         }
+        //checks if network is training or showcasing best network
         if (generatingBest){
             zomboEntity.genomeNum = bestGenome;
         } else {
             zomboEntity.genomeNum = currentGenome;
-            if (currentGenome!=genomes.size()) {
-                currentGenome ++;
-            }
-
         }
+        /*
+        increments value of current networks unless it equals the
+        total number of networks
+         */
+        if (currentGenome!=genomes.size()) {
+            currentGenome ++;
+        }
+
+
     }
+
+    /*
+    initialises the first generation of networks and
+    stores each network in an array list
+     */
 
     public ZomboNEAT(){
         this.pool = new Pool();
@@ -79,7 +100,6 @@ public class ZomboNEAT implements Environment {
                 genomes.add(g);
             }
         }
-        bestGenome = 0;
     }
 
     public boolean populationComplete(){
@@ -110,13 +130,19 @@ public class ZomboNEAT implements Environment {
 
         if (generatingBest == false){
             Genome genome = getMobGenome(zomboEntity.genomeNum);
+
+            float[] performanceData = zomboEntity.getPerformanceData();
+            int ticksSurvived = (int) performanceData[0];
+            double totalDistanceToTarget = performanceData[1];
+            int successfulHits = (int) performanceData[2];
+
             float fitness = 0;
-            if (zomboEntity.totalDistanceToTarget/zomboEntity.ticksSurvived<3){
-                fitness += 0.05*(1-(zomboEntity.totalDistanceToTarget/(zomboEntity.ticksSurvived*5)));
+            if (totalDistanceToTarget/ticksSurvived<3){
+                fitness += 0.05*(1-(totalDistanceToTarget/(ticksSurvived*5)));
             }
             //fitness += 0.1*Math.pow(zomboEntity.successfulHits, 1.5);
             //fitness += 1-Math.exp(-0.1*zomboEntity.successfulHits);
-            fitness += (1/(1+Math.exp(-0.6*(zomboEntity.successfulHits-5))))-0.0474;
+            fitness += (1/(1+Math.exp(-0.6*(successfulHits-5))))-0.0474;
             genome.setFitness(fitness);
             if (fitness>lastBestScore){
                 lastBestScore = fitness;
@@ -153,12 +179,12 @@ public class ZomboNEAT implements Environment {
 
             Genome topGenome;
             topGenome = pool.getTopGenome();
+
             bestGenome = genomes.indexOf(topGenome);
             generationEvaluationDone = true;
         }
         if (generateBestNext){
             generatingBest = true;
-            currentGenome --;
         } else {
             generationEvaluationDone = false;
             generatingBest = false;
@@ -176,9 +202,9 @@ public class ZomboNEAT implements Environment {
             genomes = Temp;
 
             this.generation++;
-
-            currentGenome = 0;
         }
+
+        currentGenome = 0;
 
 
 

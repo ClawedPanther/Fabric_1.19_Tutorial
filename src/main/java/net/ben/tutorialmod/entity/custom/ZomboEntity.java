@@ -102,6 +102,10 @@ public class ZomboEntity extends ZombieEntity{
         return allYaw;
     }
 
+    public float[] getPerformanceData(){
+        return new float[]{ticksSurvived, (float)totalDistanceToTarget, successfulHits};
+    }
+
     public void setTryJump(boolean jumpOutput){
         jump = jumpOutput;
     }
@@ -122,7 +126,7 @@ public class ZomboEntity extends ZombieEntity{
     public void tick() {
         if (this.world.isClient == false&&this.isAlive()){
             ticksSurvived ++;
-            if (ticksSurvived > 600){
+            if (ticksSurvived > 6000){
                 this.discard();
             }
 

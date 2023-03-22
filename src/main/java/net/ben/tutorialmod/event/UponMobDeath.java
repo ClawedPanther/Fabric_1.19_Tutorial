@@ -18,11 +18,11 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Box;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Random;
 
 public class UponMobDeath implements ServerEntityEvents.Unload{
-    protected int deaths = 0;
 
     @Override
     public void onUnload(Entity entity, ServerWorld world) {
@@ -32,11 +32,11 @@ public class UponMobDeath implements ServerEntityEvents.Unload{
         } else if (entity instanceof VillagerEntity){
             TutorialMod.zomboNEAT.villagerNum --;
         }
-        double x = entity.getX();
-        double y = entity.getY();
-        double z = entity.getZ();
-        Box box = new Box(x-100, y-5, z-100, x+100, y+5, z+100);
-        List<Entity> entitys = entity.world.getOtherEntities(entity, box, EntityPredicates.VALID_LIVING_ENTITY);
+//        double x = entity.getX();
+//        double y = entity.getY();
+//        double z = entity.getZ();
+//        Box box = new Box(x-100, y-5, z-100, x+100, y+5, z+100);
+//        List<Entity> entitys = entity.world.getOtherEntities(entity, box, EntityPredicates.VALID_LIVING_ENTITY);
 //        for (Entity e : entitys){
 //            if (e.getType() == EntityType.VILLAGER && e.age > 2000){
 //                e.discard();
