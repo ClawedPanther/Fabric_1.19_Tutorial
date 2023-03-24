@@ -7,30 +7,28 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
-import net.minecraft.client.model.Dilation;
-import net.minecraft.client.model.TexturedModelData;
 import net.minecraft.client.render.entity.ZombieEntityRenderer;
-import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
-import net.minecraft.client.render.entity.model.ZombieEntityModel;
-import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
 
+//initialises client side mod elements
 public class TutorialModClient implements ClientModInitializer {
     public static final EntityModelLayer MODEL_ZOMBO_LAYER = new EntityModelLayer(new Identifier(TutorialMod.MOD_ID, "zombo"), "main");
 
-    public static final GameRules.Key<GameRules.BooleanRule> GENERATE_ZOMBOS =
-            GameRuleRegistry.register("generateZombos", GameRules.Category.UPDATES, GameRuleFactory.createBooleanRule(true));
+    /*
+    initalises gamerule, boolean variables that can be changed
+    while the program is running.
+    the gamerule allows for best genome generation to be toggled
+     */
+    //
     public static final GameRules.Key<GameRules.BooleanRule> GENERATE_BEST_ZOMBOS =
             GameRuleRegistry.register("generateBestZombos", GameRules.Category.UPDATES, GameRuleFactory.createBooleanRule(false));
 
     @Override
     public void onInitializeClient() {
-        EntityRendererRegistry.register(ModEntities.ZOMBO, (context) -> {
-            return new ZombieEntityRenderer(context);
-        });
-
+        //initialises the Zombo model renderer
+        EntityRendererRegistry.register(ModEntities.ZOMBO, ZombieEntityRenderer::new);
         EntityModelLayerRegistry.registerModelLayer(MODEL_ZOMBO_LAYER, ZomboEntityModel::getTexturedModelData);
     }
 }

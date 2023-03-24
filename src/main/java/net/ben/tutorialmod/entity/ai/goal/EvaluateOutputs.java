@@ -1,11 +1,9 @@
 package net.ben.tutorialmod.entity.ai.goal;
 
 import net.ben.tutorialmod.entity.custom.ZomboEntity;
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -14,12 +12,12 @@ import net.minecraft.util.math.Vec3d;
 import java.util.EnumSet;
 
 public class EvaluateOutputs extends Goal {
-    protected final ZomboEntity mob;
-    protected double speed;
-    protected int jumpCooldown;
-    protected float slipperiness;
-    protected int jumpAssist;
-    protected int attackCooldown;
+    private final ZomboEntity mob;
+    private double speed;
+    private int jumpCooldown;
+    private float slipperiness;
+    private int jumpAssist;
+    private int attackCooldown;
 
 
     @Override
@@ -95,7 +93,7 @@ public class EvaluateOutputs extends Goal {
                 this.mob.swingHand(Hand.MAIN_HAND);
                 if (square_distance <= max_square_distance) {
                     this.mob.tryAttack(this.mob.getTarget());
-                    this.mob.successfulHits++;
+                    this.mob.incrementSuccessfulHits();
                 }
             }
         }

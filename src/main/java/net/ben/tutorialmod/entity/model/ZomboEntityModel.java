@@ -1,14 +1,15 @@
 package net.ben.tutorialmod.entity.model;
 
-import net.ben.tutorialmod.entity.custom.ZomboEntity;
 import net.minecraft.client.model.Dilation;
 import net.minecraft.client.model.ModelData;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.model.TexturedModelData;
-import net.minecraft.client.render.entity.model.EntityModel;
-import net.minecraft.client.render.entity.model.EntityModelPartNames;
 import net.minecraft.client.render.entity.model.ZombieEntityModel;
 
+/*
+ gives Zombos a model identical to the default Minecraft
+ zombies so that Zombos can be rendered in game
+ */
 public class ZomboEntityModel extends ZombieEntityModel{
 
 

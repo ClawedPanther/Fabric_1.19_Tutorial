@@ -4,61 +4,31 @@ import net.ben.tutorialmod.NEAT.Environment;
 import net.ben.tutorialmod.NEAT.Genome;
 import net.ben.tutorialmod.NEAT.Pool;
 import net.ben.tutorialmod.NEAT.Species;
-import net.ben.tutorialmod.NEAT.config.NEAT_Config;
 import net.ben.tutorialmod.TutorialModClient;
 import net.ben.tutorialmod.entity.custom.ZomboEntity;
-import net.minecraft.util.math.MathHelper;
-
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 
-/**
- * Created by vishnughosh on 05/03/17.
- */
+
 public class ZomboNEAT implements Environment {
 
-    protected  boolean generatingBest = false;
-    protected boolean generateBestNext = false;
-    protected boolean generationEvaluationDone = false;
-    protected int currentGenome = 0;
-    protected Pool pool;
-    protected ArrayList<Genome> genomes = new ArrayList<>();
-    protected int generation = 0;
-    protected int genomesEvaluated = 0;
-    public float lastBestScore = 0;
-    protected int bestGenome = 0;
-    public int villagerNum = 0;
-
-
-
-
+    // shows if best are genomes currently being showcased
+    private  boolean generatingBest = false;
     /*
-    @Override
-    public void evaluateFitness(ArrayList<Genome> population) {
+    shows if best genomes should be showcased in
+    the next generation
+     */
+    private boolean generateBestNext = false;
 
-        for (Genome gene: population) {
-            float fitness = 0;
-            gene.setFitness(0);
-            for (int i = 0; i < 2; i++)
-                for (int j = 0; j < 2; j++) {
-                    float inputs[] = {i, j};
-                    float output[] = gene.evaluateNetwork(inputs);
-                    int expected = i^j;
-                    //                  System.out.println("Inputs are " + inputs[0] +" " + inputs[1] + " output " + output[0] + " Answer : " + (i ^ j));
-                    //if (output[0] == (i ^ j))
-                    fitness +=  (1 - Math.abs(expected - output[0]));
-                }
-            fitness = fitness * fitness;
 
-            gene.setFitness(fitness);
-
-        }
-
-    }
-    */
+    private boolean generationEvaluationDone = false;
+    private int currentGenome = 0;
+    private Pool pool;
+    private ArrayList<Genome> genomes = new ArrayList<>();
+    private int generation = 0;
+    private int genomesEvaluated = 0;
+    private float lastBestScore = 0;
+    private int bestGenome = 0;
+    private int villagerNum = 0;
 
 
     /*
@@ -71,9 +41,9 @@ public class ZomboNEAT implements Environment {
         }
         //checks if network is training or showcasing best network
         if (generatingBest){
-            zomboEntity.genomeNum = bestGenome;
+            zomboEntity.setGenomeNum(bestGenome);
         } else {
-            zomboEntity.genomeNum = currentGenome;
+            zomboEntity.setGenomeNum(currentGenome);
         }
         /*
         increments value of current networks unless it equals the
@@ -102,12 +72,20 @@ public class ZomboNEAT implements Environment {
         }
     }
 
+    /*
+     returns boolean based on whether all genomes of the current generation have been assigned
+     */
     public boolean populationComplete(){
         return currentGenome==genomes.size();
     }
 
-    public boolean generationComplete() {return genomesEvaluated==genomes.size();}
 
+    /*
+    returns the genome at the passed index.
+    due to multiple instances of Zombos being created simultaneously
+    it is possible (but rare) for Zombos to have genomes that are out of range.
+    the method assigns Zombos the genome at greatest index.
+     */
     public Genome getMobGenome(int genomeNum){
 
         while (genomeNum >= genomes.size()){
@@ -119,31 +97,53 @@ public class ZomboNEAT implements Environment {
         return mobGenome;
     }
 
+
+    /*
+    assigns the genome of the provided Zombo a fitness
+    based on the Zombo's performance
+     */
     public void assignFitness(ZomboEntity zomboEntity){
 
         genomesEvaluated ++;
+
+        //checks if the next generation is due to showcase the best genome
         if (zomboEntity.world.getGameRules().getBoolean(TutorialModClient.GENERATE_BEST_ZOMBOS)){
             generateBestNext = true;
         } else {
             generateBestNext = false;
         }
 
+        /*
+         fitness is only evaluated when training,
+         not when demonstrating the best performing
+         genome
+         */
         if (generatingBest == false){
-            Genome genome = getMobGenome(zomboEntity.genomeNum);
+            Genome genome = getMobGenome(zomboEntity.getGenomeNum());
 
-            float[] performanceData = zomboEntity.getPerformanceData();
-            int ticksSurvived = (int) performanceData[0];
-            double totalDistanceToTarget = performanceData[1];
-            int successfulHits = (int) performanceData[2];
+            double averageDistanceToTarget = zomboEntity.getAverageDistanceToTarget();
 
             float fitness = 0;
-            if (totalDistanceToTarget/ticksSurvived<3){
-                fitness += 0.05*(1-(totalDistanceToTarget/(ticksSurvived*5)));
+            // score only assined when average distance to target is < 3 blocks
+            if (averageDistanceToTarget<3){
+                /*
+                 linear function, returns value between 0 and 0.05 which is
+                 highest when average distance to target is lowest.
+                 averageDistanceToTarget multiplied by a third
+                 to ensure the value is between 0 and 1
+                 */
+                fitness += 0.05*(1-(averageDistanceToTarget)*(1/3));
             }
-            //fitness += 0.1*Math.pow(zomboEntity.successfulHits, 1.5);
-            //fitness += 1-Math.exp(-0.1*zomboEntity.successfulHits);
-            fitness += (1/(1+Math.exp(-0.6*(successfulHits-5))))-0.0474;
+
+            /*
+            sigmoid function, returns a value between 0 and 1
+            5 successful hits will award the average score
+             */
+            fitness += (1/(1+Math.exp(-0.6*(zomboEntity.getSuccessfulHits()-5))))-0.0474;
+
             genome.setFitness(fitness);
+
+            //keeps track of the highest perfoming network
             if (fitness>lastBestScore){
                 lastBestScore = fitness;
             }
@@ -156,11 +156,7 @@ public class ZomboNEAT implements Environment {
         }
     }
 
-    public float getTopScorer(){
-        Genome topGenome = pool.getTopGenome();
-        return topGenome.getPoints();
-    }
-
+    //basic accessor and mutator methods
     public int getGeneration(){
         return generation;
     }
@@ -169,11 +165,25 @@ public class ZomboNEAT implements Environment {
         return currentGenome;
     }
 
-    public int getGenomesSize(){
-        return genomes.size();
+    public int getVillagerNum(){
+        return villagerNum;
     }
 
+    public void setVillagerNum(int newVillagerNum){
+        villagerNum = newVillagerNum;
+    }
+
+    public float getLastBestScore(){
+        return lastBestScore;
+    }
+
+
+    //creates the next generation of genomes
     private void doGeneration(){
+        /*
+        evaluates the generation (if it has
+        not been evaluated already)
+         */
         if (generationEvaluationDone==false){
             pool.evaluateFitness(this);
 
@@ -183,16 +193,22 @@ public class ZomboNEAT implements Environment {
             bestGenome = genomes.indexOf(topGenome);
             generationEvaluationDone = true;
         }
+        /*
+        if best genomes are to be showcased
+        no new genomes need to be created
+         */
         if (generateBestNext){
             generatingBest = true;
         } else {
             generationEvaluationDone = false;
             generatingBest = false;
 
+            //new generation if genomes is created
             pool.breedNewGeneration();
 
             ArrayList<Genome> Temp = new ArrayList<>();
 
+            //new genomes are locally stored
             for(Species s: this.pool.getSpecies()){
                 for(Genome g: s.getGenomes()){
                     Temp.add(g);
@@ -210,46 +226,33 @@ public class ZomboNEAT implements Environment {
 
     }
 
+    /*
+    takes the current inputs from a Zombo
+    and sets the attributes that decide what
+    it will do based on the outputs of its
+    assigned neural network
+     */
     public void getGenomeOutput(ZomboEntity zomboEntity){
-        Genome genome = getMobGenome(zomboEntity.genomeNum);
+        Genome genome = getMobGenome(zomboEntity.getGenomeNum());
         float inputs[] = zomboEntity.getZomboInputs();
+
+        //creates output array from neural network outputs
         float output[] = genome.evaluateNetwork(inputs);
+
+        // sets Zombo's attributes
         zomboEntity.setTryAttack(output[0]>=0.5);
         zomboEntity.setTryWalk(output[1]>=0.5);
         zomboEntity.setAllYaw(output[2]*360);
     }
-/*
-    public static void main(String arg0[]){
-        ZomboNEAT zomboNEAT = new ZomboNEAT();
 
-        Pool pool = new Pool();
-        pool.initializePool();
-
-        Genome topGenome = new Genome();
-        int generation = 0;
-        while(true){
-            //pool.evaluateFitness();
-            pool.evaluateFitness(zomboNEAT);
-            topGenome = pool.getTopGenome();
-            System.out.println("TopFitness : " + topGenome.getPoints());
-
-            if(topGenome.getPoints()>15){
-                break;
-            }
-//            System.out.println("Population : " + pool.getCurrentPopulation() );
-            System.out.println("Generation : " + generation );
-            //           System.out.println("Total number of matches played : "+TicTacToe.matches);
-            //           pool.calculateGenomeAdjustedFitness();
-
-            pool.breedNewGeneration();
-            generation++;
-
-        }
-        System.out.println(topGenome.evaluateNetwork(new float[]{1,0})[0]);
-    }*/
-
+    /*
+    the github codebase normally uses this method to
+    assign fitness to genomes all at once.
+    since this is not needed for my project the method
+    is overridden to be empty
+     */
     @Override
     public void evaluateFitness(ArrayList<Genome> population) {
-
+        ;
     }
 }
