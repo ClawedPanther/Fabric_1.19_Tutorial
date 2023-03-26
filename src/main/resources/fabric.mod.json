@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "id": "tutorialmod",
+  "id": "neatmobsmod",
   "version": "${version}",
 
-  "name": "Tutorial Mod",
+  "name": "NEAT Mobs Mod",
   "description": "This is an example description! Tell everyone what your mod is about!",
   "authors": [
     "Ben"
@@ -19,14 +19,14 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.ben.tutorialmod.TutorialMod"
+      "net.ben.neatmobsmod.NEATMobsMod"
     ],
     "client": [
-      "net.ben.tutorialmod.TutorialModClient"
+      "net.ben.neatmobsmod.NEATMobsModClient"
     ]
   },
   "mixins": [
-    "tutorialmod.mixins.json"
+    "neatmobsmod.mixins.json"
   ],
 
   "depends": {
